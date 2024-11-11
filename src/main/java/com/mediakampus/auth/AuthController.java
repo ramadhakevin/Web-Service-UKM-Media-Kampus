@@ -42,8 +42,9 @@ public class AuthController {
             @ApiResponse(responseCode = "401",
                     description = "Invalid credentials", content = @Content)
     })
+
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Valid AuthRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest request) {
         try {
             // Mencoba melakukan autentikasi menggunakan username dan password
             Authentication authentication = authenticationManager.authenticate(
@@ -53,11 +54,18 @@ public class AuthController {
             // Jika autentikasi berhasil, generate JWT token menggunakan email dari request
             String accessToken = jwtUtil.generateAccessToken(request.getEmail());
 
-            // Membuat response berisi email dan token
+            // Proses autentikasi
             AuthResponse response = new AuthResponse(request.getEmail(), accessToken);
             return ResponseEntity.ok().body(response);
+
         } catch (BadCredentialsException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid credentials");
+            System.out.println("Login error: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+
+        } catch (Exception ex) {
+            System.out.println("Unexpected error: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred during authentication");
         }
     }
 

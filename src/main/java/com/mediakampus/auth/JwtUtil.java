@@ -3,10 +3,8 @@ package com.mediakampus.auth;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
-import io.jsonwebtoken.SignatureException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +12,7 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
 
     @Value("${jwt.secret}")
     private String SECRET_KEY;
@@ -21,7 +20,6 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long EXPIRE_DURATION;
 
-    // Generate JWT Token
     public String generateAccessToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
@@ -32,34 +30,35 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Validasi Token JWT
     public boolean validateAccessToken(String token) {
         try {
-            Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token);
-            return true;
-        } catch (ExpiredJwtException ex) {
-            System.out.println("JWT expired: " + ex.getMessage());
-        } catch (MalformedJwtException ex) {
-            System.out.println("Invalid JWT: " + ex.getMessage());
-        } catch (UnsupportedJwtException ex) {
-            System.out.println("JWT not supported: " + ex.getMessage());
-        } catch (SignatureException ex) {
-            System.out.println("Signature validation failed: " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            System.out.println("JWT claims are empty: " + ex.getMessage());
+            Claims claims = parseClaims(token);
+            Date expiration = claims.getExpiration();
+            return !expiration.before(new Date());
+        } catch (Exception ex) {
+            logger.error("JWT validation failed: {}", ex.getMessage());
+            return false;
         }
-        return false;
     }
 
-    // Mengambil subject dari token (username)
     public String getSubject(String token) {
-        return parseClaims(token).getSubject();
+        try {
+            return parseClaims(token).getSubject();
+        } catch (Exception ex) {
+            logger.error("Failed to get subject from token: {}", ex.getMessage());
+            throw new RuntimeException("Invalid token");
+        }
     }
 
     private Claims parseClaims(String token) {
-        return Jwts.parser()
-                .setSigningKey(SECRET_KEY)
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts.parser()
+                    .setSigningKey(SECRET_KEY)
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception ex) {
+            logger.error("Failed to parse JWT claims: {}", ex.getMessage());
+            throw new RuntimeException("Failed to parse JWT claims");
+        }
     }
 }
