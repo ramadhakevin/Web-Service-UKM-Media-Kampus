@@ -42,8 +42,10 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeRequests()
-                .requestMatchers("/api/users/login", "/api/users/register", "/docs/**").permitAll()
-                .anyRequest().authenticated()
+                .requestMatchers("/api/users/login", "/api/users/register", "/docs/**").permitAll() // Endpoint yang dapat diakses tanpa otentikasi
+                .requestMatchers("/api/inventaris/**").hasRole("ADMIN") // Hanya admin yang bisa mengakses inventaris
+                .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN") // User dan admin bisa mengakses manajemen akun
+                .anyRequest().authenticated() // Semua request lainnya memerlukan otentikasi
                 .and()
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

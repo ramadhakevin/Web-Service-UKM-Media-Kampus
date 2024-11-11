@@ -38,4 +38,9 @@ public class Peminjaman {
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
+
+    // Misalkan entitas User memiliki field nama
+    public String getPeminjam() {
+        return user != null ? user.getNama() : null; // Pastikan User tidak null sebelum mengakses
+    }
 }

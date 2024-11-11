@@ -15,4 +15,7 @@ public interface PeminjamanRepository extends JpaRepository<Peminjaman, Long> {
 
     // Mencari peminjaman berdasarkan ID dan User
     Optional<Peminjaman> findByIdPeminjamanAndUser(Long idPeminjaman, User user);
+
+    // Mencari peminjaman berdasarkan ID barang (inventaris)
+    List<Peminjaman> findByIdBarang(Long idBarang);
 }
