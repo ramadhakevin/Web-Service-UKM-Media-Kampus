@@ -16,13 +16,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     private UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        if (!StringUtils.hasText(username)) {
-            throw new UsernameNotFoundException("Username cannot be empty");
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        if (!StringUtils.hasText(email)) {
+            throw new UsernameNotFoundException("Email cannot be empty");
         }
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         // Pastikan role memiliki prefix "ROLE_"
         String role = StringUtils.hasText(user.getRole()) ?
